@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.env
+*.pkl
+outputs/figures
+outputs/logs
+outputs/metrics
+data/processed/
+data/sample_stream/
+notepad/
+models/

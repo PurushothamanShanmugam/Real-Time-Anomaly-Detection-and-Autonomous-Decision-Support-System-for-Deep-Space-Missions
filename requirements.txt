@@ -1,0 +1,13 @@
+pandas
+numpy
+scikit-learn
+streamlit
+matplotlib
+plotly
+pytest
+joblib
+fastapi
+uvicorn[standard]
+prometheus-client
+kafka-python
+requests

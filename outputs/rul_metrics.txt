@@ -1,0 +1,6 @@
+RUL Model Evaluation on Test Data
+=================================
+MAE: 28.2320
+MSE: 1615.0590
+RMSE: 40.1878
+R2: 0.6465

@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.git
+.gitignore
+outputs/
+data/processed/
+data/sample_stream/
+notepad/

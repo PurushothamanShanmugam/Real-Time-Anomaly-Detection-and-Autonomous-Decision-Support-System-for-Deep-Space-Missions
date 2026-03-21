@@ -2,21 +2,20 @@ from pydantic import BaseModel
 
 
 class TelemetryRequest(BaseModel):
-    unit_id: int
-    time_cycle: int
+    unit_id:      int
+    time_cycle:   int
     op_setting_1: float
     op_setting_2: float
     op_setting_3: float
-
-    sensor_1: float
-    sensor_2: float
-    sensor_3: float
-    sensor_4: float
-    sensor_5: float
-    sensor_6: float
-    sensor_7: float
-    sensor_8: float
-    sensor_9: float
+    sensor_1:  float
+    sensor_2:  float
+    sensor_3:  float
+    sensor_4:  float
+    sensor_5:  float
+    sensor_6:  float
+    sensor_7:  float
+    sensor_8:  float
+    sensor_9:  float
     sensor_10: float
     sensor_11: float
     sensor_12: float
@@ -32,9 +31,13 @@ class TelemetryRequest(BaseModel):
 
 
 class PredictionResponse(BaseModel):
-    unit_id: int
-    time_cycle: int
-    anomaly_score: float
-    anomaly_flag: int
-    predicted_rul: float
+    unit_id:            int
+    time_cycle:         int
+    anomaly_score:      float
+    anomaly_flag:       int
+    anomaly_detected:   bool
+    predicted_rul:      float
     recommended_action: str
+    risk_score:         float
+    confidence:         str
+    justification:      str

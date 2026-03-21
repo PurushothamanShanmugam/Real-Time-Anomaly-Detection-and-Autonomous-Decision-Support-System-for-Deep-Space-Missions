@@ -1,13 +1,30 @@
+# Core data & ML
 pandas
 numpy
 scikit-learn
-streamlit
-matplotlib
-plotly
-pytest
 joblib
+
+# Deep learning (needed for LSTM + Autoencoder in main_extended.py)
+tensorflow>=2.13
+
+# Dashboard & visualisation
+streamlit
+plotly
+matplotlib
+
+# Inference API
 fastapi
 uvicorn[standard]
+pydantic
+
+# Monitoring
 prometheus-client
+
+# Streaming (optional — Kafka demo)
 kafka-python
+
+# HTTP utilities
 requests
+
+# Testing
+pytest

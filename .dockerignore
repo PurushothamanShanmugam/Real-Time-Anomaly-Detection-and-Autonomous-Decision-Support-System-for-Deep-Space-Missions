@@ -1,8 +1,20 @@
+# Git history
+.git/
+.gitignore
+
+# Python cache
 __pycache__/
 *.pyc
-.git
-.gitignore
+*.pyo
+
+# Archives
+*.zip
+*.tar.gz
+
+# outputs and models are mounted as volumes — no need to bake into image
 outputs/
-data/processed/
-data/sample_stream/
-notepad/
+models/
+
+# NOTE: data/ is intentionally NOT excluded
+# Dockerfile.pipeline needs data/raw/train_FD001.txt to run main.py
+# Other Dockerfiles (api, dashboard, consumer) don't copy data/ so this is fine

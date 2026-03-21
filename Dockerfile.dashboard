@@ -1,0 +1,32 @@
+# Dockerfile.dashboard
+# ─────────────────────
+# Builds the Streamlit dashboard container.
+# This is the same as the main Dockerfile — kept as a named alias
+# so docker-compose.yml can reference it explicitly if needed.
+#
+# The entrypoint.sh script:
+#   1. Checks if telemetry_results.csv exists (mounted via volume)
+#   2. If not found, runs main.py to generate it
+#   3. Launches the Streamlit dashboard on port 8501
+
+FROM python:3.10-slim
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
+
+# Install only what the dashboard needs — no TensorFlow
+RUN pip install --no-cache-dir \
+    pandas numpy scikit-learn joblib \
+    streamlit plotly matplotlib \
+    kafka-python requests
+
+COPY . /app
+
+RUN chmod +x /app/entrypoint.sh
+
+EXPOSE 8501
+
+ENTRYPOINT ["/app/entrypoint.sh"]

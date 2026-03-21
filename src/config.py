@@ -14,11 +14,17 @@ TRAIN_DATA_PATH = RAW_DATA_DIR / "train_FD001.txt"
 
 # Output files
 RESULT_CSV_PATH = OUTPUT_DIR / "telemetry_results.csv"
+RESULT_EXTENDED_CSV_PATH = OUTPUT_DIR / "telemetry_results_extended.csv"
 RUL_METRICS_PATH = OUTPUT_DIR / "rul_metrics.txt"
 
 # Model files
 ANOMALY_MODEL_PATH = MODEL_DIR / "anomaly_model.pkl"
 RUL_MODEL_PATH = MODEL_DIR / "rul_model.pkl"
+
+# Deep learning model files (created by main_extended.py)
+LSTM_MODEL_PATH = MODEL_DIR / "rul_lstm_model.keras"
+AUTOENCODER_MODEL_PATH = MODEL_DIR / "autoencoder_model.keras"
+AUTOENCODER_THRESHOLD_PATH = MODEL_DIR / "autoencoder_threshold.pkl"
 
 # Random states
 RANDOM_STATE = 42
@@ -29,6 +35,16 @@ ANOMALY_CONTAMINATION = 0.05
 
 # RUL model settings
 RUL_N_ESTIMATORS = 100
+
+# LSTM settings
+LSTM_SEQUENCE_LENGTH = 30
+LSTM_EPOCHS = 30
+LSTM_BATCH_SIZE = 64
+
+# Autoencoder settings
+AUTOENCODER_EPOCHS = 50
+AUTOENCODER_BATCH_SIZE = 256
+AUTOENCODER_RUL_THRESHOLD = 50   # train only on engines with RUL > this
 
 # Feature engineering settings
 ROLLING_WINDOW = 5

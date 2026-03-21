@@ -1,6 +1,24 @@
-version: "3.8"
+# docker-compose.kafka.yml
+# ────────────────────────
+# Starts ONLY Zookeeper + Kafka — without the API, dashboard,
+# Prometheus, or Grafana.
+#
+# Use this when you want to run Kafka independently, for example
+# to test the producer/consumer scripts while running the API
+# locally (not in Docker).
+#
+# Usage:
+#   docker compose -f docker-compose.kafka.yml up -d
+#
+# Then in separate terminals:
+#   python kafka/producer.py
+#   python kafka/consumer.py
+#
+# To run the FULL stack (API + dashboard + Kafka + monitoring):
+#   docker compose up --build
 
 services:
+
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: telemetry-zookeeper
@@ -9,6 +27,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
+    restart: always
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
@@ -21,10 +40,9 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    restart: always

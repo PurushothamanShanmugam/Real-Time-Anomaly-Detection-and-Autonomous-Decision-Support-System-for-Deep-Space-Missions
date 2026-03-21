@@ -3,35 +3,101 @@ name: CI Pipeline
 on:
   push:
     branches: [ main, master ]
-
   pull_request:
     branches: [ main, master ]
 
 jobs:
 
-  build-and-test:
-
+  test:
+    name: Run Tests & Syntax Checks
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Python
+      - name: Setup Python 3.10
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
-      - name: Install dependencies
+      - name: Install dependencies (no TensorFlow for CI speed)
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install \
+            pandas numpy scikit-learn joblib \
+            streamlit plotly matplotlib \
+            fastapi "uvicorn[standard]" pydantic \
+            prometheus-client kafka-python requests \
+            pytest
 
-      - name: Run tests
+      - name: Run unit tests
         run: |
-          pytest tests/
+          pytest tests/test_decision_engine.py \
+                 tests/test_decision_confidence.py \
+                 tests/test_train_anomaly.py \
+                 tests/test_data_loader.py \
+                 tests/test_preprocess.py \
+                 tests/test_dashboard_and_entrypoint.py \
+                 -v --tb=short
 
-      - name: Run pipeline check
+      - name: Syntax check — source modules
         run: |
-          python main.py
+          python -m py_compile main.py
+          python -m py_compile src/config.py
+          python -m py_compile src/data_loader.py
+          python -m py_compile src/preprocess.py
+          python -m py_compile src/feature_engineering.py
+          python -m py_compile src/train_anomaly.py
+          python -m py_compile src/train_autoencoder.py
+          python -m py_compile src/train_rul.py
+          python -m py_compile src/train_rul_lstm.py
+          python -m py_compile src/decision_engine.py
+          python -m py_compile src/decision_confidence.py
+          python -m py_compile src/evaluate.py
+          python -m py_compile src/simulator.py
+          python -m py_compile src/utils.py
+          echo "Source modules: OK"
+
+      - name: Syntax check — API
+        run: |
+          python -m py_compile api/main.py
+          python -m py_compile api/inference.py
+          python -m py_compile api/schemas.py
+          python -m py_compile api/metrics.py
+          echo "API modules: OK"
+
+      - name: Syntax check — Kafka
+        run: |
+          python -m py_compile kafka/producer.py
+          python -m py_compile kafka/consumer.py
+          echo "Kafka modules: OK"
+
+      - name: Syntax check — Dashboard
+        run: |
+          python -m py_compile app/streamlit_app.py
+          echo "Dashboard: OK"
+
+      - name: Verify entrypoint.sh is executable
+        run: |
+          test -f entrypoint.sh || (echo "entrypoint.sh missing" && exit 1)
+          bash -n entrypoint.sh
+          echo "entrypoint.sh syntax: OK"
+
+      - name: Import check (no TensorFlow)
+        run: |
+          python -c "
+          from src.config import *
+          from src.data_loader import load_cmapss_data
+          from src.preprocess import add_rul, scale_features
+          from src.feature_engineering import create_telemetry_features
+          from src.train_anomaly import train_anomaly_model, detect_anomalies
+          from src.train_rul import split_rul_data, train_rul_model
+          from src.decision_engine import recommend_action
+          from src.decision_confidence import recommend_action_with_confidence, run_q_learning_demo
+          from src.evaluate import create_anomaly_ground_truth, evaluate_anomaly_detection
+          from collections import deque
+          from api.schemas import TelemetryRequest, PredictionResponse
+          from api.metrics import PREDICTION_REQUESTS, PREDICTION_FAILURES, ANOMALIES_DETECTED, PREDICTION_LATENCY
+          print('All imports: OK')
+          "

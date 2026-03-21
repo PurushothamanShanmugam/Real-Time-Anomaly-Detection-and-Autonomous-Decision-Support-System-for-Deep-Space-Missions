@@ -1,4 +1,15 @@
+# environment.yml — Conda environment for local development
+#
+# Creates a conda environment with all dependencies needed to run
+# the full pipeline including TensorFlow (LSTM + Autoencoder).
+#
+# Usage:
+#   conda env create -f environment.yml
+#   conda activate telemetry_ai
+#   python main.py
+
 name: telemetry_ai
+
 channels:
   - conda-forge
   - defaults
@@ -10,8 +21,27 @@ dependencies:
   - numpy
   - scikit-learn
   - matplotlib
+  - joblib
+
   - pip:
+      # Deep learning
+      - tensorflow>=2.13
+
+      # Dashboard & visualisation
       - streamlit
       - plotly
+
+      # Inference API
+      - fastapi
+      - uvicorn[standard]
+      - pydantic
+      - prometheus-client
+
+      # Kafka streaming
+      - kafka-python
+
+      # HTTP utilities
+      - requests
+
+      # Testing
       - pytest
-      - joblib

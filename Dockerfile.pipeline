@@ -1,0 +1,31 @@
+# Dockerfile.pipeline
+# ────────────────────
+# Runs main.py inside Docker to train all models and generate
+# telemetry_results.csv. Includes TensorFlow for LSTM + Autoencoder.
+#
+# This runs ONCE as a dependency before the dashboard and API start.
+# Outputs are written to shared volumes: /app/outputs and /app/models
+
+FROM python:3.10-slim
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
+# Suppress TensorFlow verbose logs
+ENV TF_CPP_MIN_LOG_LEVEL=2
+ENV TF_ENABLE_ONEDNN_OPTS=0
+
+# Install all ML dependencies including TensorFlow
+RUN pip install --no-cache-dir \
+    pandas numpy scikit-learn joblib matplotlib \
+    tensorflow \
+    kafka-python requests
+
+# Copy everything needed to run main.py
+COPY src/        /app/src/
+COPY main.py     /app/main.py
+COPY data/       /app/data/
+
+CMD ["python", "main.py"]

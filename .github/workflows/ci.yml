@@ -32,6 +32,8 @@ jobs:
             pytest
 
       - name: Run unit tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}
         run: |
           pytest tests/test_decision_engine.py \
                  tests/test_decision_confidence.py \
@@ -85,6 +87,8 @@ jobs:
           echo "entrypoint.sh syntax: OK"
 
       - name: Import check (no TensorFlow)
+        env:
+          PYTHONPATH: ${{ github.workspace }}
         run: |
           python -c "
           from src.config import *

@@ -50,9 +50,9 @@ a.anchor-link                                    { display: none !important; }
 .anchor-link                                     { display: none !important; }
 h1 .anchor-link, h2 .anchor-link,
 h3 .anchor-link, h4 .anchor-link                 { display: none !important; }
-h1 a, h2 a, h3 a, h4 a, h5 a, h6 a             { display: none !important; }
+h1 a, h2 a, h3 a, h4 a, h5 a, h6 a               { display: none !important; }
 h1 a svg, h2 a svg, h3 a svg,
-h4 a svg, h5 a svg, h6 a svg                    { display: none !important; }
+h4 a svg, h5 a svg, h6 a svg                     { display: none !important; }
 [data-testid="stHeadingActionElements"]          { display: none !important; }
 [data-testid="stMarkdownContainer"] h1 a,
 [data-testid="stMarkdownContainer"] h2 a,
@@ -232,9 +232,9 @@ if missing:
 has_confidence  = "risk_score" in df.columns and "confidence" in df.columns
 has_autoencoder = "reconstruction_error" in df.columns and "autoencoder_anomaly_flag" in df.columns
 
-unit_ids      = sorted(df["unit_id"].unique().tolist())
-selected_unit = st.sidebar.selectbox("Select Engine / Unit", unit_ids)
-show_anom_only= st.sidebar.checkbox("Show anomalies only", value=False)
+unit_ids       = sorted(df["unit_id"].unique().tolist())
+selected_unit  = st.sidebar.selectbox("Select Engine / Unit", unit_ids)
+show_anom_only = st.sidebar.checkbox("Show anomalies only", value=False)
 
 unit_df_full = df[df["unit_id"] == selected_unit].copy().sort_values("time_cycle")
 if unit_df_full.empty:
@@ -269,10 +269,13 @@ max_rul     = max(float(unit_df_full["RUL"].max()), 1.0)
 health      = max(0, min(100, round((pred_rul / max_rul) * 100, 2)))
 pred_err    = abs(actual_rul - pred_rul)
 
-if   "CRITICAL"  in latest_act: sc, at, ac = "status-critical", "CRITICAL ALERT",  "#ef4444"
+if "CRITICAL" in latest_act:
+    sc, at, ac = "status-critical", "CRITICAL ALERT", "#ef4444"
 elif any(w in latest_act for w in ["HIGH RISK","WARNING","CAUTION"]):
-                                  sc, at, ac = "status-warning",  "WARNING ALERT",   "#f59e0b"
-else:                             sc, at, ac = "status-normal",   "NORMAL STATUS",   "#22c55e"
+    sc, at, ac = "status-warning", "WARNING ALERT", "#f59e0b"
+else:
+    sc, at, ac = "status-normal", "NORMAL STATUS", "#22c55e"
+
 hc = "health-good" if health >= 70 else "health-medium" if health >= 40 else "health-bad"
 
 
@@ -285,24 +288,27 @@ if page == "Overview & Anomaly Detection":
     st.markdown(
         f"<p class='small-text'>NASA C-MAPSS Dataset · Unit {selected_unit} · "
         f"{'Extended pipeline active (LSTM + Autoencoder + Risk Scoring)' if using_extended else 'Base pipeline active'}</p>",
-        unsafe_allow_html=True)
+        unsafe_allow_html=True
+    )
 
-    total_rec   = len(df)
-    total_anom  = int((df["anomaly_flag"] == -1).sum())
-    total_norm  = int((df["anomaly_flag"] ==  1).sum())
-    crit_count  = int(df["recommended_action"].str.contains("CRITICAL", na=False).sum())
+    total_rec  = len(df)
+    total_anom = int((df["anomaly_flag"] == -1).sum())
+    total_norm = int((df["anomaly_flag"] == 1).sum())
+    crit_count = int(df["recommended_action"].str.contains("CRITICAL", na=False).sum())
 
-    c1,c2,c3,c4 = st.columns(4)
-    for col, label, val in zip([c1,c2,c3,c4],
-            ["Total Records","Detected Anomalies","Normal Records","Critical Cases"],
-            [total_rec, total_anom, total_norm, crit_count]):
+    c1, c2, c3, c4 = st.columns(4)
+    for col, label, val in zip(
+        [c1, c2, c3, c4],
+        ["Total Records", "Detected Anomalies", "Normal Records", "Critical Cases"],
+        [total_rec, total_anom, total_norm, crit_count]
+    ):
         with col:
             st.markdown(f'<div class="metric-card"><h3>{label}</h3><h2>{val:,}</h2></div>', unsafe_allow_html=True)
 
     st.markdown("---")
     st.subheader(f"Unit {selected_unit} — Latest Status")
 
-    sc1,sc2,sc3,sc4 = st.columns(4)
+    sc1, sc2, sc3, sc4 = st.columns(4)
     with sc1:
         st.markdown(f"**Latest Cycle:** {int(latest['time_cycle'])}")
         st.markdown(f"**Actual RUL:** {int(actual_rul)}")
@@ -317,35 +323,40 @@ if page == "Overview & Anomaly Detection":
         if has_confidence:
             risk = float(latest["risk_score"])
             conf = str(latest["confidence"])
-            cfc  = f"conf-{conf.lower()}"
+            cfc = f"conf-{conf.lower()}"
             st.markdown(f"**Risk:** {risk:.2f} · **Confidence:** <span class='{cfc}'>{conf}</span>", unsafe_allow_html=True)
 
     st.markdown("---")
-    g1,g2,g3,g4 = st.columns(4)
-    av = 100 if "CRITICAL" in latest_act else 60 if any(w in latest_act for w in ["HIGH RISK","WARNING","CAUTION"]) else 20
+    g1, g2, g3, g4 = st.columns(4)
+    av = 100 if "CRITICAL" in latest_act else 60 if any(w in latest_act for w in ["HIGH RISK", "WARNING", "CAUTION"]) else 20
 
     def gauge(val, title, bar_color, steps):
-        fig = go.Figure(go.Indicator(mode="gauge+number", value=val, title={"text": title},
-            gauge={"axis": {"range": [0,100]}, "bar": {"color": bar_color}, "steps": steps}))
-        fig.update_layout(height=270, margin=dict(l=20,r=20,t=50,b=10))
+        fig = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=val,
+            title={"text": title},
+            gauge={"axis": {"range": [0, 100]}, "bar": {"color": bar_color}, "steps": steps}
+        ))
+        fig.update_layout(height=270, margin=dict(l=20, r=20, t=50, b=10))
         return fig
 
-    steps_risk    = [{"range":[0,40],"color":"#14532d"},{"range":[40,70],"color":"#78350f"},{"range":[70,100],"color":"#7f1d1d"}]
-    steps_health  = [{"range":[0,40],"color":"#7f1d1d"},{"range":[40,70],"color":"#78350f"},{"range":[70,100],"color":"#14532d"}]
+    steps_risk   = [{"range":[0,40],"color":"#14532d"},{"range":[40,70],"color":"#78350f"},{"range":[70,100],"color":"#7f1d1d"}]
+    steps_health = [{"range":[0,40],"color":"#7f1d1d"},{"range":[40,70],"color":"#78350f"},{"range":[70,100],"color":"#14532d"}]
 
-    with g1: st.plotly_chart(gauge(av, "Alert Level", ac, steps_risk), use_container_width=True)
+    with g1:
+        st.plotly_chart(gauge(av, "Alert Level", ac, steps_risk), use_container_width=True)
     with g2:
-        hbar = "#22c55e" if health>=70 else "#f59e0b" if health>=40 else "#ef4444"
+        hbar = "#22c55e" if health >= 70 else "#f59e0b" if health >= 40 else "#ef4444"
         st.plotly_chart(gauge(health, "Health Score (%)", hbar, steps_health), use_container_width=True)
     with g3:
-        fr = min(100, round((unit_anom/unit_total)*100*5,2)) if unit_total else 0
-        fb = "#ef4444" if fr>=70 else "#f59e0b" if fr>=40 else "#22c55e"
+        fr = min(100, round((unit_anom / unit_total) * 100 * 5, 2)) if unit_total else 0
+        fb = "#ef4444" if fr >= 70 else "#f59e0b" if fr >= 40 else "#22c55e"
         st.plotly_chart(gauge(fr, "Failure Risk (%)", fb, steps_risk), use_container_width=True)
     with g4:
         if has_confidence:
-            rv = float(latest["risk_score"])*100
-            rb = "#ef4444" if rv>=70 else "#f59e0b" if rv>=40 else "#22c55e"
-            st.plotly_chart(gauge(round(rv,1), "Risk Score (×100)", rb, steps_risk), use_container_width=True)
+            rv = float(latest["risk_score"]) * 100
+            rb = "#ef4444" if rv >= 70 else "#f59e0b" if rv >= 40 else "#22c55e"
+            st.plotly_chart(gauge(round(rv, 1), "Risk Score (×100)", rb, steps_risk), use_container_width=True)
         else:
             st.markdown("### Live Status")
             st.markdown(f"**Alert:** <span style='color:{ac};font-weight:bold'>{at}</span>", unsafe_allow_html=True)
@@ -356,22 +367,26 @@ if page == "Overview & Anomaly Detection":
     st.markdown("---")
     st.subheader("Anomaly Score Timeline")
     tdf = unit_df_full.copy()
-    tdf["Label"] = tdf["anomaly_flag"].map({1:"Normal",-1:"Anomaly"})
-    hover = ["RUL","predicted_RUL","recommended_action"] + (["risk_score","confidence"] if has_confidence else [])
-    fig_t = px.scatter(tdf, x="time_cycle", y="anomaly_score", color="Label",
-                       color_discrete_map={"Normal":"#22c55e","Anomaly":"#ef4444"},
-                       hover_data=hover, template="plotly_dark")
+    tdf["Label"] = tdf["anomaly_flag"].map({1: "Normal", -1: "Anomaly"})
+    hover = ["RUL", "predicted_RUL", "recommended_action"] + (["risk_score", "confidence"] if has_confidence else [])
+    fig_t = px.scatter(
+        tdf, x="time_cycle", y="anomaly_score", color="Label",
+        color_discrete_map={"Normal":"#22c55e","Anomaly":"#ef4444"},
+        hover_data=hover, template="plotly_dark"
+    )
     fig_t.add_hline(y=0, line_dash="dash", line_color="white")
     fig_t.update_layout(height=400, xaxis_title="Cycle", yaxis_title="Anomaly Score (Isolation Forest)")
     st.plotly_chart(fig_t, use_container_width=True)
 
-    d1,d2 = st.columns(2)
+    d1, d2 = st.columns(2)
     with d1:
         st.subheader("Anomaly Flag Distribution")
         ac2 = unit_df_full["anomaly_flag"].value_counts().sort_index()
-        ac2.index = ac2.index.map({1:"Normal (1)",-1:"Anomaly (-1)"})
-        fig = px.bar(x=ac2.index, y=ac2.values, template="plotly_dark",
-                     color=ac2.index, color_discrete_map={"Normal (1)":"#22c55e","Anomaly (-1)":"#ef4444"})
+        ac2.index = ac2.index.map({1: "Normal (1)", -1: "Anomaly (-1)"})
+        fig = px.bar(
+            x=ac2.index, y=ac2.values, template="plotly_dark",
+            color=ac2.index, color_discrete_map={"Normal (1)":"#22c55e","Anomaly (-1)":"#ef4444"}
+        )
         fig.update_layout(height=340, showlegend=False)
         st.plotly_chart(fig, use_container_width=True)
     with d2:
@@ -385,7 +400,7 @@ if page == "Overview & Anomaly Detection":
     st.subheader("Telemetry Data Table")
     dcols = [c for c in required if c in unit_df.columns]
     if has_confidence:
-        dcols += [c for c in ["risk_score","confidence","justification"] if c in unit_df.columns]
+        dcols += [c for c in ["risk_score", "confidence", "justification"] if c in unit_df.columns]
     st.dataframe(unit_df[dcols], use_container_width=True)
 
 
@@ -405,20 +420,28 @@ elif page == "RUL Prediction & Model Comparison":
     </div>""", unsafe_allow_html=True)
 
     fig_rul = go.Figure()
-    fig_rul.add_trace(go.Scatter(x=unit_df_full["time_cycle"], y=unit_df_full["RUL"],
-        mode="lines", name="Actual RUL", line=dict(color="#22c55e")))
-    fig_rul.add_trace(go.Scatter(x=unit_df_full["time_cycle"], y=unit_df_full["predicted_RUL"],
-        mode="lines", name="RF Predicted RUL", line=dict(color="#3b82f6", dash="dash")))
-    fig_rul.update_layout(template="plotly_dark", height=370,
-                           xaxis_title="Cycle", yaxis_title="RUL (cycles)",
-                           title=f"Actual vs Predicted RUL — Unit {selected_unit}")
+    fig_rul.add_trace(go.Scatter(
+        x=unit_df_full["time_cycle"], y=unit_df_full["RUL"],
+        mode="lines", name="Actual RUL", line=dict(color="#22c55e")
+    ))
+    fig_rul.add_trace(go.Scatter(
+        x=unit_df_full["time_cycle"], y=unit_df_full["predicted_RUL"],
+        mode="lines", name="RF Predicted RUL", line=dict(color="#3b82f6", dash="dash")
+    ))
+    fig_rul.update_layout(
+        template="plotly_dark", height=370,
+        xaxis_title="Cycle", yaxis_title="RUL (cycles)",
+        title=f"Actual vs Predicted RUL — Unit {selected_unit}"
+    )
     st.plotly_chart(fig_rul, use_container_width=True)
 
     err_df = unit_df_full.copy()
     err_df["abs_error"] = (err_df["RUL"] - err_df["predicted_RUL"]).abs()
     fig_err = px.line(err_df, x="time_cycle", y="abs_error", template="plotly_dark")
-    fig_err.update_layout(height=280, title="Absolute Prediction Error Over Time",
-                           xaxis_title="Cycle", yaxis_title="|Actual − Predicted|")
+    fig_err.update_layout(
+        height=280, title="Absolute Prediction Error Over Time",
+        xaxis_title="Cycle", yaxis_title="|Actual − Predicted|"
+    )
     st.plotly_chart(fig_err, use_container_width=True)
 
     st.markdown("---")
@@ -435,8 +458,10 @@ elif page == "RUL Prediction & Model Comparison":
             for line in rf_path.read_text().splitlines():
                 if ":" in line and not line.startswith("RUL") and not line.startswith("="):
                     k, v = line.split(":", 1)
-                    try: st.metric(k.strip(), f"{float(v.strip()):.4f}")
-                    except ValueError: pass
+                    try:
+                        st.metric(k.strip(), f"{float(v.strip()):.4f}")
+                    except ValueError:
+                        pass
         else:
             st.info("Run main.py to generate RF metrics.")
 
@@ -446,8 +471,10 @@ elif page == "RUL Prediction & Model Comparison":
             for line in lstm_path.read_text().splitlines():
                 if ":" in line and not line.startswith("LSTM") and not line.startswith("="):
                     k, v = line.split(":", 1)
-                    try: st.metric(k.strip(), f"{float(v.strip()):.4f}")
-                    except ValueError: pass
+                    try:
+                        st.metric(k.strip(), f"{float(v.strip()):.4f}")
+                    except ValueError:
+                        pass
         else:
             st.warning("LSTM metrics not found. Re-run the pipeline to generate LSTM metrics.")
 
@@ -459,8 +486,10 @@ elif page == "RUL Prediction & Model Comparison":
     st.markdown("---")
     st.subheader("Actual vs Predicted RUL — Scatter (all units, sampled)")
     sample_df = df.sample(min(5000, len(df)), random_state=42)
-    fig_sc = px.scatter(sample_df, x="RUL", y="predicted_RUL", opacity=0.35, template="plotly_dark",
-                         labels={"RUL":"Actual RUL","predicted_RUL":"RF Predicted RUL"})
+    fig_sc = px.scatter(
+        sample_df, x="RUL", y="predicted_RUL", opacity=0.35, template="plotly_dark",
+        labels={"RUL":"Actual RUL","predicted_RUL":"RF Predicted RUL"}
+    )
     mv = max(sample_df["RUL"].max(), sample_df["predicted_RUL"].max())
     fig_sc.add_shape(type="line", x0=0, y0=0, x1=mv, y1=mv, line=dict(color="red", dash="dash"))
     fig_sc.update_layout(height=400)
@@ -490,22 +519,24 @@ elif page == "Risk Score & Decision Confidence":
 
     risk = float(latest["risk_score"])
     conf = str(latest["confidence"])
-    just = str(latest.get("justification","—"))
+    just = str(latest.get("justification", "—"))
     cfc  = f"conf-{conf.lower()}"
 
     dc1, dc2, dc3 = st.columns(3)
     with dc1:
-        rc = "#ef4444" if risk>=0.7 else "#f59e0b" if risk>=0.4 else "#22c55e"
-        fig = go.Figure(go.Indicator(mode="gauge+number", value=round(risk*100,1),
+        rc = "#ef4444" if risk >= 0.7 else "#f59e0b" if risk >= 0.4 else "#22c55e"
+        fig = go.Figure(go.Indicator(
+            mode="gauge+number", value=round(risk * 100, 1),
             title={"text":"Risk Score (%)"},
             gauge={"axis":{"range":[0,100]},"bar":{"color":rc},
-                   "steps":[{"range":[0,40],"color":"#14532d"},{"range":[40,70],"color":"#78350f"},{"range":[70,100],"color":"#7f1d1d"}]}))
-        fig.update_layout(height=240, margin=dict(l=20,r=20,t=50,b=10))
+                   "steps":[{"range":[0,40],"color":"#14532d"},{"range":[40,70],"color":"#78350f"},{"range":[70,100],"color":"#7f1d1d"}]}
+        ))
+        fig.update_layout(height=240, margin=dict(l=20, r=20, t=50, b=10))
         st.plotly_chart(fig, use_container_width=True)
     with dc2:
         st.metric("Confidence Level", conf)
         st.metric("Predicted RUL", f"{pred_rul:.1f} cycles")
-        st.metric("Recommended Action", latest_act[:28]+"…" if len(latest_act)>30 else latest_act)
+        st.metric("Recommended Action", latest_act[:28] + "…" if len(latest_act) > 30 else latest_act)
     with dc3:
         st.markdown("**Decision Justification:**")
         st.markdown(f'<div class="info-box">{just}</div>', unsafe_allow_html=True)
@@ -513,27 +544,35 @@ elif page == "Risk Score & Decision Confidence":
     st.markdown("---")
     st.subheader("Risk Score Over Time")
     fig_risk = go.Figure()
-    fig_risk.add_trace(go.Scatter(x=unit_df_full["time_cycle"], y=unit_df_full["risk_score"],
+    fig_risk.add_trace(go.Scatter(
+        x=unit_df_full["time_cycle"], y=unit_df_full["risk_score"],
         mode="lines", fill="tozeroy", fillcolor="rgba(239,68,68,0.2)",
-        line=dict(color="#ef4444"), name="Risk Score"))
-    fig_risk.add_hline(y=0.7, line_dash="dash", line_color="#ef4444",  annotation_text="Critical (0.7)")
-    fig_risk.add_hline(y=0.4, line_dash="dash", line_color="#f59e0b",  annotation_text="Warning (0.4)")
-    fig_risk.update_layout(template="plotly_dark", height=360,
-                            xaxis_title="Cycle", yaxis_title="Risk Score", yaxis_range=[0,1])
+        line=dict(color="#ef4444"), name="Risk Score"
+    ))
+    fig_risk.add_hline(y=0.7, line_dash="dash", line_color="#ef4444", annotation_text="Critical (0.7)")
+    fig_risk.add_hline(y=0.4, line_dash="dash", line_color="#f59e0b", annotation_text="Warning (0.4)")
+    fig_risk.update_layout(
+        template="plotly_dark", height=360,
+        xaxis_title="Cycle", yaxis_title="Risk Score", yaxis_range=[0,1]
+    )
     st.plotly_chart(fig_risk, use_container_width=True)
 
     p1, p2 = st.columns(2)
     with p1:
         st.subheader("Confidence Distribution")
         cc = unit_df_full["confidence"].value_counts()
-        fig = px.pie(values=cc.values, names=cc.index, template="plotly_dark",
-                     color=cc.index, color_discrete_map={"HIGH":"#22c55e","MEDIUM":"#f59e0b","LOW":"#ef4444"})
+        fig = px.pie(
+            values=cc.values, names=cc.index, template="plotly_dark",
+            color=cc.index, color_discrete_map={"HIGH":"#22c55e","MEDIUM":"#f59e0b","LOW":"#ef4444"}
+        )
         fig.update_layout(height=320)
         st.plotly_chart(fig, use_container_width=True)
     with p2:
         st.subheader("Risk Score Distribution")
-        fig = px.histogram(unit_df_full, x="risk_score", nbins=30, template="plotly_dark",
-                           color_discrete_sequence=["#3b82f6"])
+        fig = px.histogram(
+            unit_df_full, x="risk_score", nbins=30, template="plotly_dark",
+            color_discrete_sequence=["#3b82f6"]
+        )
         fig.add_vline(x=0.4, line_dash="dash", line_color="#f59e0b")
         fig.add_vline(x=0.7, line_dash="dash", line_color="#ef4444")
         fig.update_layout(height=320, xaxis_title="Risk Score", yaxis_title="Count")
@@ -546,7 +585,7 @@ elif page == "Risk Score & Decision Confidence":
         for _, row in anom_rows.iterrows():
             with st.expander(f"Cycle {int(row['time_cycle'])} — Risk: {row['risk_score']:.2f} | Confidence: {row['confidence']}"):
                 st.markdown(f"**Action:** {row['recommended_action']}")
-                st.markdown(f"**Justification:** {row.get('justification','—')}")
+                st.markdown(f"**Justification:** {row.get('justification', '—')}")
                 st.markdown(f"Actual RUL: `{int(row['RUL'])}` · Predicted RUL: `{row['predicted_RUL']:.1f}` · Score: `{row['anomaly_score']:.4f}`")
     else:
         st.info("No anomaly rows for this unit.")
@@ -574,28 +613,38 @@ elif page == "Autoencoder Analysis":
 
     st.subheader(f"Reconstruction Error Over Time — Unit {selected_unit}")
     fig_re = go.Figure()
-    fig_re.add_trace(go.Scatter(x=unit_df_full["time_cycle"], y=unit_df_full["reconstruction_error"],
-        mode="lines", name="Reconstruction Error", line=dict(color="#a78bfa")))
+    fig_re.add_trace(go.Scatter(
+        x=unit_df_full["time_cycle"], y=unit_df_full["reconstruction_error"],
+        mode="lines", name="Reconstruction Error", line=dict(color="#a78bfa")
+    ))
     ae_anom = unit_df_full[unit_df_full["autoencoder_anomaly_flag"] == 1]
-    fig_re.add_trace(go.Scatter(x=ae_anom["time_cycle"], y=ae_anom["reconstruction_error"],
-        mode="markers", marker=dict(color="#ef4444", size=5), name="AE Anomaly"))
-    fig_re.update_layout(template="plotly_dark", height=370,
-                          xaxis_title="Cycle", yaxis_title="Reconstruction Error (MSE)")
+    fig_re.add_trace(go.Scatter(
+        x=ae_anom["time_cycle"], y=ae_anom["reconstruction_error"],
+        mode="markers", marker=dict(color="#ef4444", size=5), name="AE Anomaly")
+    )
+    fig_re.update_layout(
+        template="plotly_dark", height=370,
+        xaxis_title="Cycle", yaxis_title="Reconstruction Error (MSE)"
+    )
     st.plotly_chart(fig_re, use_container_width=True)
 
     cmp1, cmp2 = st.columns(2)
     with cmp1:
         st.subheader("Isolation Forest")
         ifc = unit_df_full["anomaly_flag"].map({1:"Normal",-1:"Anomaly"}).value_counts()
-        fig = px.pie(values=ifc.values, names=ifc.index, template="plotly_dark",
-                     color=ifc.index, color_discrete_map={"Normal":"#22c55e","Anomaly":"#ef4444"})
+        fig = px.pie(
+            values=ifc.values, names=ifc.index, template="plotly_dark",
+            color=ifc.index, color_discrete_map={"Normal":"#22c55e","Anomaly":"#ef4444"}
+        )
         fig.update_layout(height=300)
         st.plotly_chart(fig, use_container_width=True)
     with cmp2:
         st.subheader("Autoencoder")
         aec = unit_df_full["autoencoder_anomaly_flag"].map({0:"Normal",1:"Anomaly"}).value_counts()
-        fig = px.pie(values=aec.values, names=aec.index, template="plotly_dark",
-                     color=aec.index, color_discrete_map={"Normal":"#22c55e","Anomaly":"#ef4444"})
+        fig = px.pie(
+            values=aec.values, names=aec.index, template="plotly_dark",
+            color=aec.index, color_discrete_map={"Normal":"#22c55e","Anomaly":"#ef4444"}
+        )
         fig.update_layout(height=300)
         st.plotly_chart(fig, use_container_width=True)
 
@@ -603,16 +652,17 @@ elif page == "Autoencoder Analysis":
     ag = unit_df_full.copy()
     ag["if_a"] = (ag["anomaly_flag"] == -1).astype(int)
     ag["ae_a"] = ag["autoencoder_anomaly_flag"].astype(int)
-    ag["Agreement"] = ag.apply(lambda r:
-        "Both detect"  if r["if_a"] and r["ae_a"]  else
-        "IF only"      if r["if_a"]                 else
-        "AE only"      if r["ae_a"]                 else "Both normal", axis=1)
+    ag["Agreement"] = ag.apply(
+        lambda r: "Both detect" if r["if_a"] and r["ae_a"]
+        else "IF only" if r["if_a"]
+        else "AE only" if r["ae_a"]
+        else "Both normal",
+        axis=1
+    )
     agc = ag["Agreement"].value_counts()
     cmap = {"Both detect":"#ef4444","IF only":"#f59e0b","AE only":"#a78bfa","Both normal":"#22c55e"}
-    fig_ag = px.bar(x=agc.index, y=agc.values, template="plotly_dark",
-                    color=agc.index, color_discrete_map=cmap)
-    fig_ag.update_layout(height=320, showlegend=False,
-                          xaxis_title="Agreement Status", yaxis_title="Count")
+    fig_ag = px.bar(x=agc.index, y=agc.values, template="plotly_dark", color=agc.index, color_discrete_map=cmap)
+    fig_ag.update_layout(height=320, showlegend=False, xaxis_title="Agreement Status", yaxis_title="Count")
     st.plotly_chart(fig_ag, use_container_width=True)
 
     ae_rpt = BASE_DIR / "outputs" / "metrics" / "autoencoder_classification_report.txt"
@@ -650,7 +700,7 @@ elif page == "Reinforcement Learning Demo":
     st.markdown("---")
     st.subheader("Interactive Q-Learning Demo")
 
-    rl1, rl2 = st.columns([1,2])
+    rl1, rl2 = st.columns([1, 2])
     with rl1:
         episodes = st.slider("Training episodes", 100, 1000, 500, 50)
         alpha    = st.slider("Learning rate (α)", 0.01, 0.5, 0.1, 0.01)
@@ -672,33 +722,39 @@ elif page == "Reinforcement Learning Demo":
         with st.spinner("Training..."):
             try:
                 from src.decision_confidence import run_q_learning_demo, SpacecraftRLEnvironment
-                Q   = run_q_learning_demo(episodes=episodes, alpha=alpha, gamma=gamma, epsilon=epsilon)
+                Q = run_q_learning_demo(episodes=episodes, alpha=alpha, gamma=gamma, epsilon=epsilon)
                 env = SpacecraftRLEnvironment()
-                ACTIONS    = env.ACTIONS
-                RUL_BANDS  = ["Critical (<5)","High-risk (5–15)","Caution (15–30)","Safe (>30)"]
-                ANOM_LBLS  = ["No anomaly","Anomaly detected"]
+                ACTIONS = env.ACTIONS
+                RUL_BANDS = ["Critical (<5)", "High-risk (5–15)", "Caution (15–30)", "Safe (>30)"]
+                ANOM_LBLS = ["No anomaly", "Anomaly detected"]
 
                 rows = []
                 for anom in range(2):
                     for band in range(4):
-                        si = anom*4+band
+                        si = anom * 4 + band
                         best_a = int(np.argmax(Q[si]))
                         qv = Q[si]
-                        rows.append({"Anomaly State":ANOM_LBLS[anom],"RUL Band":RUL_BANDS[band],
-                            "Best Action":ACTIONS[best_a],
-                            "Q(do_nothing)":round(qv[0],3),"Q(monitor)":round(qv[1],3),
-                            "Q(inspect)":round(qv[2],3),"Q(shutdown)":round(qv[3],3)})
+                        rows.append({
+                            "Anomaly State": ANOM_LBLS[anom],
+                            "RUL Band": RUL_BANDS[band],
+                            "Best Action": ACTIONS[best_a],
+                            "Q(do_nothing)": round(qv[0], 3),
+                            "Q(monitor)": round(qv[1], 3),
+                            "Q(inspect)": round(qv[2], 3),
+                            "Q(shutdown)": round(qv[3], 3),
+                        })
 
                 st.success(f"Training complete — {episodes} episodes")
                 st.subheader("Learned Policy")
                 st.dataframe(pd.DataFrame(rows), use_container_width=True)
 
                 st.subheader("Q-value Heatmap")
-                q_df = pd.DataFrame(Q,
+                q_df = pd.DataFrame(
+                    Q,
                     columns=["do_nothing","monitor","inspect","emergency_shutdown"],
-                    index=[f"{ANOM_LBLS[i//4]}|{RUL_BANDS[i%4]}" for i in range(8)])
-                fig_hm = px.imshow(q_df, text_auto=".2f", template="plotly_dark",
-                                   color_continuous_scale="RdYlGn")
+                    index=[f"{ANOM_LBLS[i//4]}|{RUL_BANDS[i%4]}" for i in range(8)]
+                )
+                fig_hm = px.imshow(q_df, text_auto=".2f", template="plotly_dark", color_continuous_scale="RdYlGn")
                 fig_hm.update_layout(height=380, xaxis_title="Action", yaxis_title="State")
                 st.plotly_chart(fig_hm, use_container_width=True)
 
@@ -714,8 +770,6 @@ elif page == "Reinforcement Learning Demo":
 
 # ══════════════════════════════════════════════════════════════════════
 # PAGE 6 — LIVE STREAM
-# Polls GET /live every 3 seconds and updates all visuals in real time.
-# Each prediction made by the Kafka consumer → API appears here live.
 # ══════════════════════════════════════════════════════════════════════
 elif page == "🔴 Live Stream":
 
@@ -727,7 +781,6 @@ elif page == "🔴 Live Stream":
         unsafe_allow_html=True,
     )
 
-    # ── Controls ──────────────────────────────────────────────────
     col_ctrl1, col_ctrl2, col_ctrl3 = st.columns([1, 1, 2])
     with col_ctrl1:
         refresh_rate = st.selectbox("Refresh every", [2, 3, 5, 10], index=1)
@@ -746,23 +799,21 @@ elif page == "🔴 Live Stream":
 
     st.markdown("---")
 
-    # ── Placeholders — all updated in the polling loop ────────────
-    status_bar   = st.empty()
-    kpi_row      = st.empty()
+    status_bar = st.empty()
+    kpi_row = st.empty()
     col_left, col_right = st.columns(2)
     with col_left:
         chart_anomaly = st.empty()
     with col_right:
-        chart_rul     = st.empty()
+        chart_rul = st.empty()
     col_risk, col_conf = st.columns(2)
     with col_risk:
-        chart_risk    = st.empty()
+        chart_risk = st.empty()
     with col_conf:
         chart_actions = st.empty()
-    feed_header  = st.empty()
-    live_table   = st.empty()
+    feed_header = st.empty()
+    live_table = st.empty()
 
-    # ── Polling loop ──────────────────────────────────────────────
     while True:
         try:
             resp = requests.get(
@@ -774,8 +825,7 @@ elif page == "🔴 Live Stream":
         except Exception:
             data = None
 
-        # ── No data or API unreachable ────────────────────────────
-        if not data or data["count"] == 0:
+        if not data or data.get("count", 0) == 0:
             status_bar.markdown(
                 "<div style='background:#fff3cd;border:1px solid #ffc107;"
                 "border-radius:6px;padding:10px 16px;font-weight:700;color:#7a4a00;'>"
@@ -788,45 +838,58 @@ elif page == "🔴 Live Stream":
             st.rerun()
             break
 
-        # ── Build DataFrame ───────────────────────────────────────
         ldf = pd.DataFrame(data["predictions"])
-        ldf["timestamp"]    = pd.to_datetime(ldf["timestamp"])
-        ldf["anomaly_label"]= ldf["anomaly_flag"].map({1: "Normal", -1: "Anomaly"})
-        ldf["seq"]          = range(1, len(ldf) + 1)
+        ldf["timestamp"] = pd.to_datetime(ldf["timestamp"], errors="coerce")
+        ldf["anomaly_label"] = ldf["anomaly_flag"].map({1: "Normal", -1: "Anomaly"})
+        ldf["seq"] = range(1, len(ldf) + 1)
 
-        total      = len(ldf)
-        n_anomaly  = int((ldf["anomaly_flag"] == -1).sum())
-        n_normal   = total - n_anomaly
+        total = len(ldf)
+        n_anomaly = int((ldf["anomaly_flag"] == -1).sum())
+        n_normal = total - n_anomaly
         latest_row = ldf.iloc[-1]
-        avg_rul    = ldf["predicted_rul"].mean()
-        avg_risk   = ldf["risk_score"].mean()
+        avg_rul = pd.to_numeric(ldf["predicted_rul"], errors="coerce").mean()
+        avg_risk = pd.to_numeric(ldf["risk_score"], errors="coerce").mean()
 
-        # ── Status bar ────────────────────────────────────────────
-        act  = str(latest_row["recommended_action"])
+        act = str(latest_row.get("recommended_action", "NO ACTION AVAILABLE"))
+
         if "CRITICAL" in act:
-            bar_color = "#fdd;border-color:#c00;color:#800"
+            bg_color = "#fdd"
+            border_color = "#c00"
+            text_color = "#800"
         elif any(w in act for w in ["HIGH RISK", "WARNING", "CAUTION"]):
-            bar_color = "#fff3cd;border-color:#e65100;color:#7a4a00"
+            bg_color = "#fff3cd"
+            border_color = "#e65100"
+            text_color = "#7a4a00"
         else:
-            bar_color = "#d4edda;border-color:#155724;color:#155724"
+            bg_color = "#d4edda"
+            border_color = "#155724"
+            text_color = "#155724"
+
+        latency_ms = float(latest_row.get("latency_ms", 0) or 0)
+        latest_unit = int(latest_row.get("unit_id", 0) or 0)
+        latest_cycle = int(latest_row.get("time_cycle", 0) or 0)
+        latest_pred_rul = float(latest_row.get("predicted_rul", 0) or 0)
+        latest_risk = float(latest_row.get("risk_score", 0) or 0)
+        latest_conf = str(latest_row.get("confidence", "UNKNOWN"))
 
         status_bar.markdown(
-            f"<div style='background:{bar_color.split(';')[0].split(':')[1]};"
-            f"border:2px solid {bar_color.split(';')[1].split(':')[1]};"
+            f"<div style='background:{bg_color};"
+            f"border:2px solid {border_color};"
             f"border-radius:6px;padding:10px 18px;font-weight:800;font-size:14px;"
-            f"color:{bar_color.split(';')[2].split(':')[1]};'>"
-            f"🛰️ Latest:  Unit {int(latest_row['unit_id'])}  |  "
-            f"Cycle {int(latest_row['time_cycle'])}  |  "
-            f"RUL {latest_row['predicted_rul']:.1f}  |  "
-            f"Risk {latest_row['risk_score']:.2f}  |  "
-            f"Confidence: {latest_row['confidence']}  |  "
+            f"color:{text_color};'>"
+            f"🛰️ Latest:  Unit {latest_unit}  |  "
+            f"Cycle {latest_cycle}  |  "
+            f"RUL {latest_pred_rul:.1f}  |  "
+            f"Risk {latest_risk:.2f}  |  "
+            f"Confidence: {latest_conf}  |  "
             f"<b>{act}</b>  |  "
-            f"⏱ Latency: {latest_row.get('latency_ms', 0):.1f} ms"
+            f"⏱ Latency: {latency_ms:.1f} ms"
             f"</div>",
             unsafe_allow_html=True,
         )
 
-        # ── KPI cards ─────────────────────────────────────────────
+        anomaly_pct = (n_anomaly / total * 100) if total else 0.0
+
         kpi_row.markdown(
             f"""
             <div style='display:flex;gap:12px;margin:10px 0;'>
@@ -841,7 +904,7 @@ elif page == "🔴 Live Stream":
                 <div style='font-size:10px;font-weight:700;color:#607d8b;letter-spacing:1.5px;'>
                   ANOMALIES DETECTED</div>
                 <div style='font-size:28px;font-weight:900;color:#c62828;'>{n_anomaly:,}</div>
-                <div style='font-size:10px;color:#607d8b;'>{n_anomaly/total*100:.1f}% of stream</div>
+                <div style='font-size:10px;color:#607d8b;'>{anomaly_pct:.1f}% of stream</div>
               </div>
               <div style='flex:1;background:#fff;border:1px solid #7bbfe0;border-radius:8px;
                    padding:14px;border-top:3px solid #2e7d32;'>
@@ -868,7 +931,6 @@ elif page == "🔴 Live Stream":
             unsafe_allow_html=True,
         )
 
-        # ── Anomaly score timeline ────────────────────────────────
         fig_a = px.scatter(
             ldf, x="seq", y="anomaly_score", color="anomaly_label",
             color_discrete_map={"Normal": "#2e7d32", "Anomaly": "#c62828"},
@@ -886,7 +948,6 @@ elif page == "🔴 Live Stream":
         )
         chart_anomaly.plotly_chart(fig_a, use_container_width=True)
 
-        # ── Predicted RUL over stream ─────────────────────────────
         fig_r = px.line(
             ldf, x="seq", y="predicted_rul",
             labels={"seq": "Prediction #", "predicted_rul": "Predicted RUL"},
@@ -902,19 +963,14 @@ elif page == "🔴 Live Stream":
         )
         chart_rul.plotly_chart(fig_r, use_container_width=True)
 
-        # ── Risk score over stream ────────────────────────────────
         fig_risk = px.area(
             ldf, x="seq", y="risk_score",
             title="Risk Score — Live Stream",
             labels={"seq": "Prediction #", "risk_score": "Risk Score"},
             color_discrete_sequence=["#e65100"],
         )
-        fig_risk.add_hline(y=0.7, line_dash="dash", line_color="#c62828",
-                           line_width=1, annotation_text="Critical 0.7",
-                           annotation_font_size=10)
-        fig_risk.add_hline(y=0.4, line_dash="dash", line_color="#e65100",
-                           line_width=1, annotation_text="Warning 0.4",
-                           annotation_font_size=10)
+        fig_risk.add_hline(y=0.7, line_dash="dash", line_color="#c62828", line_width=1, annotation_text="Critical 0.7", annotation_font_size=10)
+        fig_risk.add_hline(y=0.4, line_dash="dash", line_color="#e65100", line_width=1, annotation_text="Warning 0.4", annotation_font_size=10)
         fig_risk.update_layout(
             height=280, yaxis_range=[0, 1],
             margin=dict(l=40, r=10, t=40, b=30),
@@ -925,13 +981,16 @@ elif page == "🔴 Live Stream":
         )
         chart_risk.plotly_chart(fig_risk, use_container_width=True)
 
-        # ── Recommended action distribution ──────────────────────
         action_counts = ldf["recommended_action"].value_counts()
         colors = []
         for a in action_counts.index:
-            if "CRITICAL" in a:   colors.append("#c62828")
-            elif any(w in a for w in ["HIGH", "WARNING", "CAUTION"]): colors.append("#e65100")
-            else:                  colors.append("#2e7d32")
+            if "CRITICAL" in a:
+                colors.append("#c62828")
+            elif any(w in a for w in ["HIGH", "WARNING", "CAUTION"]):
+                colors.append("#e65100")
+            else:
+                colors.append("#2e7d32")
+
         fig_act = px.bar(
             x=action_counts.index, y=action_counts.values,
             title="Recommended Actions — Live Stream",
@@ -950,7 +1009,6 @@ elif page == "🔴 Live Stream":
         )
         chart_actions.plotly_chart(fig_act, use_container_width=True)
 
-        # ── Live prediction feed table ────────────────────────────
         feed_header.markdown(
             f"<div style='font-weight:800;font-size:14px;color:#0d1f35;"
             f"margin-top:8px;'>📋 Live Prediction Feed  "
@@ -958,18 +1016,14 @@ elif page == "🔴 Live Stream":
             f"(last {min(20, len(ldf))} predictions — newest first)</span></div>",
             unsafe_allow_html=True,
         )
+
         display_cols = [
             "timestamp", "unit_id", "time_cycle",
             "anomaly_flag", "anomaly_score",
             "predicted_rul", "risk_score",
             "confidence", "recommended_action",
         ]
-        display_df = (
-            ldf[display_cols]
-            .tail(20)
-            .iloc[::-1]
-            .copy()
-        )
+        display_df = ldf[display_cols].tail(20).iloc[::-1].copy()
         display_df["timestamp"] = display_df["timestamp"].dt.strftime("%H:%M:%S")
         display_df.columns = [
             "Time", "Unit", "Cycle",
@@ -979,6 +1033,5 @@ elif page == "🔴 Live Stream":
         ]
         live_table.dataframe(display_df, use_container_width=True, height=380)
 
-        # ── Wait then rerun ───────────────────────────────────────
         time.sleep(refresh_rate)
         st.rerun()
